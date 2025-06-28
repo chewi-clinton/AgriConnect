@@ -1,0 +1,125 @@
+{% extends "farmer/base.html" %}
+
+{% block content %}
+<!-- Edit Product Form -->
+<section class="products-section">
+    <div class="container">
+        <div class="form-container">
+            <h2 class="form-title">Editing: {{ product.name }}</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data" class="product-form">
+                {{ form.hidden_tag() }}
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-input") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.category_id.label(class="form-label") }}
+                        {{ form.category_id(class="form-input") }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-input") }}
+                </div>
+                <div class="form-row form-row-triple">
+                    <div class="form-group">
+                        {{ form.price.label(class="form-label") }}
+                        {{ form.price(class="form-input") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.quantity.label(class="form-label") }}
+                        {{ form.quantity(class="form-input") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.unit.label(class="form-label") }}
+                        {{ form.unit(class="form-input") }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.location.label(class="form-label") }}
+                        {{ form.location(class="form-input") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.harvest_date.label(class="form-label") }}
+                        {{ form.harvest_date(class="form-input") }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    {{ form.image.label(class="form-label") }}
+                    {{ form.image(class="form-input") }}
+                    <small class="form-text">Upload a new image to replace the primary one.</small>
+                </div>
+
+                <div class="form-actions">
+                    {{ form.submit(value="Update Product", class="cta-button") }}
+                    <a href="{{ url_for('farmer.list_products') }}" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Image Management -->
+        <div class="image-management-section">
+            <h3 class="section-title">Product Images</h3>
+            <div class="image-grid">
+                {% for image in product.images %}
+                <div class="image-card">
+                    <img src="{{ image.image_url }}" alt="Product Image">
+                    <form method="POST" action="{{ url_for('farmer.delete_product_image', image_id=image.id) }}"
+                        onsubmit="return confirm('Delete this image?');">
+                        {{ delete_form.hidden_tag() }}
+                        <button type="submit" class="btn-delete-icon">&times;</button>
+                    </form>
+                </div>
+                {% else %}
+                <p>No images uploaded for this product.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Price History -->
+        <div class="price-history-section">
+            <h3 class="section-title">Price History</h3>
+            <ul class="price-history-list">
+                {% for history in price_history %}
+                <li>
+                    <span class="price">FCFA {{ "{:,.0f}".format(history.price) }}</span>
+                    <span class="date">Set on: {{ history.changed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </li>
+                {% else %}
+                <li>No price changes recorded.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+
+
+<script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const nav = document.querySelector('.nav');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navToggle.addEventListener('click', () => {
+        nav.classList.toggle('is-active');
+        navToggle.classList.toggle('is-active');
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            nav.classList.remove('is-active');
+            navToggle.classList.remove('is-active');
+        });
+    });
+</script>
+{% endblock %}
