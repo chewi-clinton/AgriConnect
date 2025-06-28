@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgriConnect</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/UserLogin.css')}}" />
+    <link rel="icon" href="{{url_for('static', filename='img/agrilogo.PNG')}}" type="image/png">
+
+    <style>
+        body {
+            background-image: url("{{url_for('static', filename='img/Background-img.jpg')}}");
+        }
+
+        button a {
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="left-header">
+            <img src="{{url_for('static', filename='img/agrilogo.PNG')}}" alt="AgriConnect Logo" class="logo" />
+            <p class="agi">AgriConnect</p>
+        </div>
+        <div class="right">
+            <button><a href="/about">About</a></button>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="login-header">Welcome Back</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-input", placeholder="Enter your email") }}
+                    {% for error in form.email.errors %}
+                    <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.password.label(class="form-label") }}
+                    {{ form.password(class="form-input", placeholder="Enter your password") }}
+                    {% for error in form.password.errors %}
+                    <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class="login-button") }}
+                </div>
+            </form>
+            <div class="register-link">
+                <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
