@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/UserDashboard.css') }}" />
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCNx_NsdsE0xS7CEkyp5skrOYa1TPY82yY&libraries=places"
+        async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Header */
+
+        .header {
+            background: #28a745;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-container {
+            position: relative;
+            margin-left: 30px;
+        }
+
+        .search-input {
+            padding: 10px 40px 10px 20px;
+            border: none;
+            border-radius: 25px;
+            width: 300px;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #fff;
+            background-image: url('/static/img/maleAvatar.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+            max-width: 100%;
+            margin: 0;
+            background-color: white;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: #ffffff;
+            border-right: 1px solid #e1e8ed;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .conversations {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .conversation-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .conversation-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .conversation-item.active {
+            background-color: #e3f2fd;
+        }
+
+        .user-avatar-small {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ddd;
+            background-image: url('/static/img/maleAvatar.jpg');
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .conversation-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .conversation-preview {
+            font-size: 13px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Marketplace Section */
+        .marketplace-section {
+            background-color: #fff;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 20px;
+        }
+
+        .marketplace-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .listing-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .listing-title {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .listing-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .rate-seller-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .rate-seller-btn:hover {
+            background-color: #218838;
+        }
+
+        .report-seller-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .report-seller-btn:hover {
+            background-color: #c82333;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            background-color: #f8f9fa;
+
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bot-message,
+        .user-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+        }
+
+        .user-message {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            width: 300px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+
+        }
+
+        .bot-message .message-bubble {
+            background-color: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 6px;
+
+        }
+
+        .user-message .message-bubble {
+            background-color: #d1fec5;
+            color: #333;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .message-input-area {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .message-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .message-input input:focus {
+            border-color: #2d5c3b;
+        }
+
+        .location-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .location-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .location-btn:disabled {
+            background-color: #adb5bd;
+            cursor: not-allowed;
+        }
+
+        .send-btn {
+            background-color: #2d5c3b;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .send-btn:hover {
+            background-color: #1f3d27;
+        }
+
+        /* Location message styles */
+        .location-message {
+            background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+            border: 1px solid #bbdefb;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 5px 0;
+            max-width: 300px;
+        }
+
+        .location-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #1976d2;
+        }
+
+        .location-name {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .location-coordinates {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .location-btn-small {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .location-btn-small:hover {
+            background-color: #1565c0;
+            text-decoration: none;
+            color: white;
+        }
+
+        .welcome-message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            font-size: 18px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #6c757d;
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 200px;
+            }
+
+            .chat-area {
+                height: calc(100vh - 200px);
+            }
+        }
+
+        .logo {
+            text-decoration: none;
+            color: white;
+
+        }
+
+        .brand-name a {
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <!-- Header -->
+    <div class="header">
+
+        <div class="header-left">
+            <div class="logo-container">
+                <img class="logo" src="{{ url_for('static', filename='img/agrilogo.PNG') }}" alt="AgriConnect Logo" />
+                <h1 class="brand-name"><a href="/">AgriConnect</a></h1>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search messages...">
+                <button class="search-btn">Search</button>
+            </div>
+        </div>
+        <div class="user-avatar"></div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar with conversations -->
+        <div class="sidebar">
+            <div class="conversations" id="conversations">
+                {% for conversation in conversations %}
+                <div class="conversation-item" data-user-id="{{ conversation.get_other_user(current_user.id).id }}">
+                    <div class="user-avatar-small"></div>
+                    <div class="conversation-info">
+                        <div class="conversation-name">{{ conversation.get_other_user(current_user.id).username }}</div>
+                        <div class="conversation-preview">
+                            {% if conversation.last_message %}
+                            {{ conversation.last_message.content[:50] }}...
+                            {% else %}
+                            Hello, how are you?
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="padding: 20px; text-align: center; opacity: 0.7;">
+                    No conversations yet. Start a new message!
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Chat area -->
+        <div class="chat-area">
+            <!-- Marketplace listing section -->
+            <div class="marketplace-section" id="marketplace-section" {% if not marketplace_product
+                %}style="display: none;" {% endif %}>
+                <div class="marketplace-header">
+                    <h3>Product Information</h3>
+                </div>
+                <div class="listing-content">
+                    <div class="listing-title" id="product-info">
+                        {% if marketplace_product %}
+                        FCFA {{ "{:,.0f}".format(marketplace_product.price) }} · {{ marketplace_product.name }}
+                        {% else %}
+                        Product information will appear here
+                        {% endif %}
+                    </div>
+                    <div class="listing-actions">
+                        <button class="rate-seller-btn">Rate seller</button>
+                        <button class="report-seller-btn">Report seller</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages area -->
+            <div class="messages-container" id="messages-container">
+
+                <div class="welcome-message">Select a conversation to start chatting</div>
+            </div>
+
+            <!-- Message input -->
+            <div class="message-input-area" id="message-input-area">
+                <div class="message-input">
+                    <input type="text" id="message-input" placeholder="Type a message..."
+                        onkeypress="handleKeyPress(event)">
+                    <button class="location-btn" id="location-btn" onclick="shareLocation()" title="Share Location">
+                        📍
+                    </button>
+
+                    <button class="send-btn" onclick="sendMessage()">Send</button>
+                    <button class="send-btn" onclick="alert('Comming Soon')">Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Message Modal -->
+    <div id="newMessageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Start New Conversation</h3>
+                <span class="close" onclick="closeNewMessageModal()">×</span>
+            </div>
+            <div class="user-list">
+                {% for user in users %}
+                <div class="user-item" onclick="startConversation({{ user.id }}, '{{ user.username }}')">
+                    <span>{{ user.username }}</span>
+                    <span class="user-role">{{ user.role }}</span>
+                </div>
+                {% else %}
+                <div style="padding: 20px; text-align: center; color: #6c757d;">
+                    No other users available
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Google Maps Place Picker Modal -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content" style="width: 600px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>Select a Location</h3>
+                <span class="close" onclick="closeMapModal()">×</span>
+            </div>
+            <div id="map" style="height: 400px; width: 100%;"></div>
+            <div id="place-search" style="margin-top: 10px;">
+                <input type="text" id="place-input" placeholder="Search for a place..."
+                    style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #dee2e6;">
+            </div>
+            <div style="margin-top: 10px; text-align: right;">
+                <button class="location-btn-small" onclick="confirmLocation()">Confirm Location</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        let socket = io();
+        const currentUserId = {{ current_user.id }};
+        let currentConversationId = null;
+        let currentReceiverId = null;
+
+        // Socket.IO event handlers
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('newMessageModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Handle key press in message input
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Send message function
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+
+            if (message && currentReceiverId) {
+                fetch('/messages/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        receiver_id: currentReceiverId,
+                        content: message,
+                        conversation_id: currentConversationId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.conversation_id) {
+                                currentConversationId = data.conversation_id;
+                            }
+                            displayMessage(message, 'You', new Date().toISOString(), true);
+                            messageInput.value = '';
+                        } else {
+                            console.error('Error sending message:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending message:', error);
+                    });
+            }
+        }
+
+        // Display message in chat
+        function displayMessage(content, senderName, timestamp, isOwn) {
+            const messagesContainer = document.getElementById('messages-container');
+            const welcomeMessage = messagesContainer.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isOwn ? 'user-message' : 'bot-message';
+            const date = new Date(timestamp);
+            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.innerHTML = `
+            <div class="message-bubble">
+                <div class="message-sender">${senderName}</div>
+                ${content}
+                <div class="message-time">${formattedTime}</div>
+            </div>
+        `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // // Load conversation
+        // function loadConversation(userId, username, productId = null) {
+        //     currentReceiverId = parseInt(userId);
+        //     currentConversationId = null;
+
+        //     // Update active conversation
+        //     document.querySelectorAll('.conversation-item').forEach(item => {
+        //         item.classList.remove('active');
+        //     });
+        //     const conversationItem = document.querySelector(`[data-user-id="${userId}"]`);
+        //     if (conversationItem) {
+        //         conversationItem.classList.add('active');
+        //     }
+
+        //     // Clear messages
+        //     const messagesContainer = document.getElementById('messages-container');
+        //     messagesContainer.innerHTML = '';
+
+        //     // Build URL
+        //     let url = `/messages/conversation/${userId}`;
+        //     if (productId) {
+        //         url += `?product_id=${productId}`;
+        //     }
+
+        //     // Load messages via AJAX
+        //     fetch(url, {
+        //         headers: {
+        //             'Accept': 'application/json' // Explicitly request JSON
+        //         }
+        //     })
+        //         .then(response => {
+        //             // Check if response is JSON
+        //             const contentType = response.headers.get('content-type');
+        //             if (!contentType || !contentType.includes('application/json')) {
+        //                 throw new Error('Server returned non-JSON response');
+        //             }
+        //             if (!response.ok) {
+        //                 throw new Error(`HTTP error! Status: ${response.status}`);
+        //             }
+        //             return response.json();
+        //         })
+        //         .then(data => {
+        //             if (data.success && data.messages) {
+        //                 currentConversationId = data.conversation_id;
+        //                 data.messages.forEach(message => {
+        //                     const isOwn = message.sender_id == currentUserId;
+        //                     displayMessage(message.content, message.sender_username || username, message.created_at, isOwn);
+        //                 });
+
+        //                 // Update marketplace section
+        //                 const marketplaceSection = document.getElementById('marketplace-section');
+        //                 const productInfo = document.getElementById('product-info');
+        //                 if (data.product_id && data.product_name && data.product_price) {
+        //                     marketplaceSection.style.display = 'block';
+        //                     productInfo.textContent = `FCFA ${data.product_price.toLocaleString()} · ${data.product_name}`;
+        //                 } else {
+        //                     marketplaceSection.style.display = 'none';
+        //                 }
+        //             } else {
+        //                 messagesContainer.innerHTML = '<div class="welcome-message">No messages yet. Start the conversation!</div>';
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error('Error loading conversation:', error);
+        //             messagesContainer.innerHTML = `
+        //         <div class="welcome-message" style="color: #dc3545;">
+        //             Failed to load conversation. ${error.message === 'Server returned non-JSON response' ?
+        //                     'The server returned an unexpected response. Please try again or contact support.' :
+        //                     'Please check your connection or try again later.'}
+        //         </div>`;
+        //         });
+        // }
+        // // Open new message modal
+
+        function openNewMessageModal() {
+            document.getElementById('newMessageModal').style.display = 'block';
+        }
+
+        // Close new message modal
+        function closeNewMessageModal() {
+            document.getElementById('newMessageModal').style.display = 'none';
+        }
+
+        // Start conversation
+        function startConversation(userId, username) {
+            closeNewMessageModal();
+            loadConversation(userId, username);
+        }
+
+        // Initialize conversation click handlers and load from URL
+        document.addEventListener('DOMContentLoaded', function () {
+            // Remove existing event listeners to prevent duplicates
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                const newItem = item.cloneNode(true);
+                item.parentNode.replaceChild(newItem, item);
+                newItem.addEventListener('click', function () {
+                    const userId = newItem.dataset.userId;
+                    const username = newItem.querySelector('.conversation-name').textContent;
+                    loadConversation(userId, username);
+                });
+            });
+
+            // Handle direct link or URL parameters
+            const pathParts = window.location.pathname.split('/');
+            const urlParams = new URLSearchParams(window.location.search);
+            let userId = null;
+            let productId = urlParams.get('product_id');
+            let username = 'Unknown User';
+
+            // Check for /messages/conversation/{user_id}
+            if (pathParts.length >= 4 && pathParts[1] === 'messages' && pathParts[2] === 'conversation') {
+                userId = pathParts[3];
+            }
+            // Check for /messages/?conversation_id=...&user_id=...
+            else if (urlParams.get('user_id')) {
+                userId = urlParams.get('user_id');
+            }
+
+            if (userId && !isNaN(parseInt(userId))) {
+                userId = parseInt(userId);
+                // Find username
+                const conversationItem = document.querySelector(`[data-user-id="${userId}"]`);
+                if (conversationItem) {
+                    username = conversationItem.querySelector('.conversation-name').textContent;
+                } else {
+                    // Fetch username from server if not found in DOM
+                    fetch(`/user/${userId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.username) {
+                                username = data.username;
+                            }
+                            loadConversation(userId, username, productId);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching username:', error);
+                            loadConversation(userId, username, productId);
+                        });
+                }
+
+                // Load conversation
+                loadConversation(userId, username, productId);
+
+                // Clean up URL
+                const cleanUrl = '/messages';
+                window.history.replaceState({}, '', cleanUrl);
+            }
+        });
+
+
+        // Google Maps variables
+        let map;
+        let autocomplete;
+        let selectedPlace = null;
+
+        // Initialize Google Maps and Places Autocomplete
+        function initMap() {
+            // Initialize map centered at a default location (e.g., center of the world)
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 0, lng: 0 },
+                zoom: 2,
+                mapTypeControl: false,
+                streetViewControl: false
+            });
+
+            // Initialize Places Autocomplete
+            const placeInput = document.getElementById('place-input');
+            autocomplete = new google.maps.places.Autocomplete(placeInput);
+            autocomplete.bindTo('bounds', map);
+
+            // When a place is selected
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry || !place.geometry.location) {
+                    console.error('No details available for the selected place.');
+                    return;
+                }
+
+                selectedPlace = place;
+                map.setCenter(place.geometry.location);
+                map.setZoom(15);
+
+                // Add a marker at the selected location
+                new google.maps.Marker({
+                    position: place.geometry.location,
+                    map: map,
+                    title: place.name
+                });
+            });
+        }
+
+        // Open the map modal
+        function shareLocation() {
+            const mapModal = document.getElementById('mapModal');
+            mapModal.style.display = 'block';
+
+            // Initialize map after modal is visible to ensure proper rendering
+            if (!map) {
+                initMap();
+            }
+        }
+
+        // Close the map modal
+        function closeMapModal() {
+            document.getElementById('mapModal').style.display = 'none';
+            selectedPlace = null;
+            document.getElementById('place-input').value = '';
+        }
+
+        // Confirm and send the selected location
+        function confirmLocation() {
+            if (!selectedPlace) {
+                alert('Please select a location first.');
+                return;
+            }
+
+            const locationData = {
+                name: selectedPlace.name || selectedPlace.formatted_address,
+                lat: selectedPlace.geometry.location.lat(),
+                lng: selectedPlace.geometry.location.lng(),
+                formatted_address: selectedPlace.formatted_address
+            };
+
+            // Send location as a message
+            sendLocationMessage(locationData);
+
+            // Close modal and reset
+            closeMapModal();
+        }
+
+        // Send location message
+        function sendLocationMessage(locationData) {
+            if (!currentReceiverId) {
+                alert('Please select a conversation first.');
+                return;
+            }
+
+            const messageContent = JSON.stringify({
+                type: 'location',
+                name: locationData.name,
+                lat: locationData.lat,
+                lng: locationData.lng,
+                formatted_address: locationData.formatted_address
+            });
+
+            fetch('/messages/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    receiver_id: currentReceiverId,
+                    content: messageContent,
+                    conversation_id: currentConversationId
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.conversation_id) {
+                            currentConversationId = data.conversation_id;
+                        }
+                        displayLocationMessage(locationData, 'You', new Date().toISOString(), true);
+                    } else {
+                        console.error('Error sending location:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending location:', error);
+                });
+        }
+
+        // Display location message in chat
+        function displayLocationMessage(locationData, senderName, timestamp, isOwn) {
+            const messagesContainer = document.getElementById('messages-container');
+            const welcomeMessage = messagesContainer.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isOwn ? 'user-message' : 'bot-message';
+            const date = new Date(timestamp);
+            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.innerHTML = `
+        <div class="message-bubble location-message">
+            <div class="message-sender">${senderName}</div>
+            <div class="location-header">
+                <span>📍</span>
+                <span>Location Shared</span>
+            </div>
+            <div class="location-name">${locationData.name}</div>
+            <div class="location-coordinates">Lat: ${locationData.lat.toFixed(4)}, Lng: ${locationData.lng.toFixed(4)}</div>
+            <div class="location-actions">
+                <a href="https://www.google.com/maps?q=${locationData.lat},${locationData.lng}" target="_blank" class="location-btn-small">View on Map</a>
+            </div>
+            <div class="message-time">${formattedTime}</div>
+        </div>
+    `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Modify the existing new_message socket handler to support location messages
+        socket.on('new_message', function (data) {
+            console.log('New message received:', data);
+            const senderId = parseInt(data.sender_id);
+            const currentReceiverIdInt = parseInt(currentReceiverId);
+            const senderUsername = data.sender_username || 'Unknown User';
+
+            // Try to parse the message content as JSON for location data
+            let content = data.content;
+            let isLocation = false;
+            let locationData = null;
+
+            try {
+                const parsedContent = JSON.parse(data.content);
+                if (parsedContent.type === 'location') {
+                    isLocation = true;
+                    locationData = parsedContent;
+                }
+            } catch (e) {
+                // Not a JSON or location message, treat as regular text
+            }
+
+            // If the conversation with the sender is active, display the message
+            if (senderId === currentReceiverIdInt && currentReceiverIdInt !== null) {
+                if (isLocation) {
+                    displayLocationMessage(locationData, senderUsername, data.created_at, false);
+                } else {
+                    displayMessage(data.content, senderUsername, data.created_at, false);
+                }
+            }
+
+            const conversationsContainer = document.getElementById('conversations');
+            let conversationItem = document.querySelector(`.conversation-item[data-user-id="${senderId}"]`);
+
+            // If no conversation item exists, create one
+            if (!conversationItem) {
+                const noConvMsg = conversationsContainer.querySelector('div[style*="text-align: center"]');
+                if (noConvMsg) {
+                    noConvMsg.remove();
+                }
+
+                conversationItem = document.createElement('div');
+                conversationItem.classList.add('conversation-item');
+                conversationItem.setAttribute('data-user-id', senderId);
+                conversationItem.innerHTML = `
+            <div class="user-avatar-small"></div>
+            <div class="conversation-info">
+                <div class="conversation-name">${senderUsername}</div>
+                <div class="conversation-preview">${isLocation ? 'Shared a location' : data.content.substring(0, 50)}${!isLocation && data.content.length > 50 ? '...' : ''}</div>
+            </div>
+        `;
+                conversationItem.addEventListener('click', () => loadConversation(senderId, senderUsername));
+                conversationsContainer.appendChild(conversationItem);
+            } else {
+                // Update existing conversation preview
+                const previewDiv = conversationItem.querySelector('.conversation-preview');
+                if (previewDiv) {
+                    previewDiv.textContent = isLocation ? 'Shared a location' : data.content.substring(0, 50) + (data.content.length > 50 ? '...' : '');
+                }
+                // Move to top
+                conversationsContainer.insertBefore(conversationItem, conversationsContainer.firstChild);
+            }
+        });
+
+        // Update loadConversation to handle location messages
+        function loadConversation(userId, username, productId = null) {
+            currentReceiverId = parseInt(userId);
+            currentConversationId = null;
+
+            // Update active conversation
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const conversationItem = document.querySelector(`[data-user-id="${userId}"]`);
+            if (conversationItem) {
+                conversationItem.classList.add('active');
+            }
+
+            // Clear messages
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = '';
+
+            // Build URL
+            let url = `/messages/conversation/${userId}`;
+            if (productId) {
+                url += `?product_id=${productId}`;
+            }
+
+            // Load messages via AJAX
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Server returned non-JSON response');
+                    }
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.messages) {
+                        currentConversationId = data.conversation_id;
+                        data.messages.forEach(message => {
+                            const isOwn = message.sender_id == currentUserId;
+                            try {
+                                const parsedContent = JSON.parse(message.content);
+                                if (parsedContent.type === 'location') {
+                                    displayLocationMessage(parsedContent, message.sender_username || username, message.created_at, isOwn);
+                                } else {
+                                    displayMessage(message.content, message.sender_username || username, message.created_at, isOwn);
+                                }
+                            } catch (e) {
+                                displayMessage(message.content, message.sender_username || username, message.created_at, isOwn);
+                            }
+                        });
+
+                        // Update marketplace section
+                        const marketplaceSection = document.getElementById('marketplace-section');
+                        const productInfo = document.getElementById('product-info');
+                        if (data.product_id && data.product_name && data.product_price) {
+                            marketplaceSection.style.display = 'block';
+                            productInfo.textContent = `FCFA ${data.product_price.toLocaleString()} · ${data.product_name}`;
+                        } else {
+                            marketplaceSection.style.display = 'none';
+                        }
+                    } else {
+                        messagesContainer.innerHTML = '<div class="welcome-message">No messages yet. Start the conversation!</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading conversation:', error);
+                    messagesContainer.innerHTML = `
+                <div class="welcome-message" style="color: #dc3545;">
+                    Failed to load conversation. ${error.message === 'Server returned non-JSON response' ?
+                            'The server returned an unexpected response. Please try again or contact support.' :
+                            'Please check your connection or try again later.'}
+                </div>`;
+                });
+        }
+
+    </script>
+</body>
+
+</html>
