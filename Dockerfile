@@ -27,6 +27,9 @@ RUN uv sync --frozen --no-dev
 # Copy application code
 COPY . .
 
+# copy upload directory
+RUN mkdir -p /app/static/upload && chmod 755 /app/static/upload
+
 
 # Create instance directory for SQLite database
 RUN mkdir -p /app/instance && chmod 755 /app/instance
